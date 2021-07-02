@@ -1,0 +1,61 @@
+---
+
+- name: Connect to ec2
+  hosts: Backup-Manager
+  user: admin
+  become: true
+  # become_method: sudo
+
+
+
+  tasks:
+
+    
+  
+  - name: Update packages
+    apt:
+      name: "*"
+      state: latest
+      force_apt_get: true
+
+  - name: Get gnupg
+    apt:
+      name: gnupg
+      state: latest
+
+  - name: Add r1soft repo
+    shell : |
+     echo deb http://repo.r1soft.com/apt stable main >> /etc/apt/sources.list
+     wget http://repo.r1soft.com/r1soft.asc
+     apt-key add r1soft.asc
+     apt-get update
+     apt-get install serverbackup-enterprise -y
+
+  - name: Update packages
+    apt:
+     name: "*"
+     state: latest
+     force_apt_get: true
+
+  - name: Install server-backup manager
+    become: true
+    package:
+      name: serverbackup-enterprise
+      state: present
+
+
+  - name: Set user and password / set ports
+    shell: |
+     serverbackup-setup --user admin --pass r1soft 
+     serverbackup-setup --http-port 8080 --https-port 8443 
+
+  - name: Restart server
+    systemd:
+      name: sbm-server
+      state: restarted
+
+
+
+  
+
+  
